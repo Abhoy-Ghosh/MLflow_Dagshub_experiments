@@ -14,6 +14,9 @@ import mlflow.sklearn
 from mlflow.models.signature import infer_signature
 from urllib.parse import urlparse
 
+import dagshub
+dagshub.init(repo_owner='Abhoy-Ghosh', repo_name='MLflow_Dagshub_experiments', mlflow=True)
+
 logging.basicConfig(level = logging.WARN)
 logger = logging.getLogger(__name__)
 
@@ -70,18 +73,18 @@ if __name__ == "__main__":
 
         y_predicted_qualities =model.predict(X_test)
 
-        r2,rae,rmse =eval_metrics(y_test,y_predicted_qualities)
+        r2,mae,rmse =eval_metrics(y_test,y_predicted_qualities)
 
         print("ElasticNet Model alpha:{:f},l1_ratio:{:f}".format(alpha,l1_ratio))
         print("R2 : ",r2)
-        print("MAE : ",rae)
+        print("MAE : ",mae)
         print("RMSE : ",rmse)
 
         mlflow.log_param("alpha",alpha)
         mlflow.log_param("l1_ratio",l1_ratio)
 
         mlflow.log_metric("r2",r2)
-        mlflow.log_metric("mae",rae)
+        mlflow.log_metric("mae",mae)
         mlflow.log_metric("rmse",rmse)
 
         predictions = model.predict(X_train)
@@ -104,4 +107,4 @@ if __name__ == "__main__":
                 model, "model", registered_model_name="ElasticnetWineModel"
             )
         else:
-            mlflow.sklearn.log_model(model, "model")
+            mlflow.sklearn.log_model(model, "model",signature=signature)
