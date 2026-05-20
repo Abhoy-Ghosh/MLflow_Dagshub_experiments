@@ -63,8 +63,19 @@ if __name__ == "__main__":
     alpha = float(sys.argv[1]) if len(sys.argv) > 1 else 0.5
     l1_ratio = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
 
+    mlflow.set_experiment("Wine Quality Prediction")
+    
+    #Sometimes notebook sessions or crashes leave runs open. so force run end
+    mlflow.end_run()
+
     # mlflow start and model training
     with mlflow.start_run():
+
+        mlflow.set_tag("developer", "Abhoy")
+        mlflow.set_tag("project", "Wine Prediction")
+
+        mlflow.log_param("data_rows", data.shape[0])
+
         model = ElasticNet(alpha =alpha,
                            l1_ratio =l1_ratio,
                            random_state =42)
@@ -87,13 +98,20 @@ if __name__ == "__main__":
         mlflow.log_metric("mae",mae)
         mlflow.log_metric("rmse",rmse)
 
+        with open("metrics.txt", "w") as f:
+            f.write(f"R2: {r2}\n")
+            f.write(f"MAE: {mae}\n")
+            f.write(f"RMSE: {rmse}\n")
+        # Save Metrics File
+        mlflow.log_artifact("metrics.txt")
+
         predictions = model.predict(X_train)
         signature = infer_signature(X_train, predictions)
 
         ## For Remote server only(DAGShub)
 
-        # remote_server_uri="https://dagshub.com/krishnaik06/mlflowexperiments.mlflow"
-        # mlflow.set_tracking_uri(remote_server_uri)
+        remote_server_uri="https://dagshub.com/Abhoy-Ghosh/MLflow_Dagshub_experiments.mlflow"
+        mlflow.set_tracking_uri(remote_server_uri)
 
         tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
@@ -108,3 +126,18 @@ if __name__ == "__main__":
             )
         else:
             mlflow.sklearn.log_model(model, "model",signature=signature)
+
+
+"""
+Python Script
+      ↓
+ElasticNet Training
+      ↓
+MLflow Tracking
+      ↓
+DagsHub Cloud
+      ↓
+Experiment Dashboard
+      ↓
+Model Registry
+"""
